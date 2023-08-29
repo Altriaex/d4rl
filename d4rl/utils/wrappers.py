@@ -26,9 +26,6 @@ class ProxyEnv(Env):
     def render(self, *args, **kwargs):
         return self._wrapped_env.render(*args, **kwargs)
 
-    def seed(self, seed=0):
-        return self._wrapped_env.seed(seed=seed)
-
     @property
     def horizon(self):
         return self._wrapped_env.horizon
@@ -79,7 +76,7 @@ class HistoryEnv(ProxyEnv, Env):
         return flattened_history, reward, done, info
 
     def reset(self, **kwargs):
-        state = super().reset()
+        state = super().reset(**kwargs)
         self.history = deque(maxlen=self.history_len)
         self.history.append(state)
         flattened_history = self._get_history().flatten()
