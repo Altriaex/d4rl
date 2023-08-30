@@ -70,15 +70,15 @@ class HistoryEnv(ProxyEnv, Env):
         self.history = deque(maxlen=self.history_len)
 
     def step(self, action):
-        state, reward, done, info = super().step(action)
-        self.history.append(state)
+        observation, reward, terminated, truncated, info = super().step(action)
+        self.history.append(observation)
         flattened_history = self._get_history().flatten()
-        return flattened_history, reward, done, info
+        return flattened_history, reward, terminated, truncated, info
 
     def reset(self, **kwargs):
-        state = super().reset(**kwargs)
+        observation, _ = super().reset(**kwargs)
         self.history = deque(maxlen=self.history_len)
-        self.history.append(state)
+        self.history.append(observation)
         flattened_history = self._get_history().flatten()
         return flattened_history
 
@@ -158,11 +158,10 @@ class NormalizedBoxEnv(ProxyEnv):
         scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
         scaled_action = np.clip(scaled_action, lb, ub)
 
-        wrapped_step = self._wrapped_env.step(scaled_action)
-        next_obs, reward, done, info = wrapped_step
+        observation, reward, terminated, truncated, info = self._wrapped_env.step(scaled_action)
         if self._should_normalize:
-            next_obs = self._apply_normalize_obs(next_obs)
-        return next_obs, reward * self._reward_scale, done, info
+            observation = self._apply_normalize_obs(observation)
+        return observation, reward * self._reward_scale, terminated, truncated, info
 
     def __str__(self):
         return "Normalized: %s" % self._wrapped_env
